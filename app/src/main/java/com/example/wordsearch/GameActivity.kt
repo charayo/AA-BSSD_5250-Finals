@@ -1,20 +1,31 @@
 package com.example.wordsearch
 
+import android.annotation.SuppressLint
+import android.content.ClipData
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.DragEvent
+import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 
 class GameActivity : AppCompatActivity() {
     private val texts = "qwertyuiopasgdfhjklzcxvbcmcvbg"
+     var word: String = ""
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        var choosenText = TextView(this).apply {
+            text = word
+        }
 
 
         val gameBoardView = LinearLayout(this).apply {
@@ -54,11 +65,43 @@ class GameActivity : AppCompatActivity() {
                             LinearLayout.LayoutParams.WRAP_CONTENT,
                             1f,
                         )
-                        setOnClickListener {
-                            Log.d("Button", this.text.toString())
+//
+                        setOnLongClickListener { view ->
+                            // Create a ClipData object that contains the text of the button
+                            val dragData = ClipData.newPlainText("buttonText", this.text)
+
+                            // Create a DragShadowBuilder that provides a visual representation of the dragged item
+                            val shadowBuilder = View.DragShadowBuilder(view)
+
+                            // Start the drag and drop operation
+                            view.startDragAndDrop(dragData, shadowBuilder, view, 0)
+
+                            true
                         }
+
                         setBackgroundColor(Color.LTGRAY)
 
+                    }
+                    charBtn.setOnDragListener { _, event ->
+                        when (event.action) {
+                            DragEvent.ACTION_DRAG_STARTED -> {
+                                true
+                            }
+                            DragEvent.ACTION_DRAG_ENTERED -> {
+                                Log.d("Button", "Button entered: ${charBtn.text}")
+                                word += charBtn.text
+
+                                true
+                            }
+                            DragEvent.ACTION_DRAG_EXITED -> {
+                                true
+                            }
+                            DragEvent.ACTION_DROP -> {
+                                choosenText.text = word
+                                true
+                            }
+                            else -> false
+                        }
                     }
                     row.addView(charBtn)
                 }
@@ -71,6 +114,7 @@ class GameActivity : AppCompatActivity() {
                 ConstraintLayout.LayoutParams.MATCH_PARENT,
             )
             setBackgroundColor(Color.WHITE)
+            addView(choosenText)
             addView(gameBoardView)
         }
         setContentView(mainView)
